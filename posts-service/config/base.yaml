@@ -1,0 +1,16 @@
+application:
+  port: 8000
+  host: 0.0.0.0
+database:
+  backend: "seaorm"
+  username: "postgres"
+  password: "password"
+  hostname: "localhost"
+  port: 5432
+  database_name: "blog"
+  max_connections: 25
+  min_connections: 5
+  acquire_timeout: 30
+  idle_timeout: 600
+  max_lifetime: 1800
+  require_ssl: false

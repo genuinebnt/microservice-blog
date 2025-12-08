@@ -1,0 +1,35 @@
+services:
+  posts-service:
+    build: ./posts-service/
+    container_name: posts-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${POSTS_DATABASE_URL}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - posts-db
+    networks:
+      - blog-network
+
+  posts-db:
+    image: postgres:17
+    container_name: posts-db
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - posts_data:/var/lib/postgresql/data
+    networks:
+      - blog-network
+
+volumes:
+  posts_data:
+
+networks:
+  blog-network:
+    driver: bridge
