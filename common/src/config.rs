@@ -15,14 +15,28 @@ pub struct ApplicationSettings {
     pub port: u16,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseSettings {
-    pub backend: String,
+    pub backend: DbBackend,
+    pub engine: DbEngine,
     pub username: String,
     pub password: String,
     pub hostname: String,
     pub port: u16,
     pub database_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DbBackend {
+    Seaorm,
+    Sqlx,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DbEngine {
+    Postgres,
 }
 
 pub fn get_configuration(path: impl AsRef<Path>) -> Result<Settings, ConfigError> {

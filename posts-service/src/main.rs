@@ -3,7 +3,10 @@ use common::{
     telemetry::{get_subscriber, init_subscriber},
 };
 use posts::{
-    infrastructure::{database::factory::RepoProvider, http::create_router},
+    infrastructure::{
+        database::{bootstrap::bootstrap, factory::RepoProvider, url::build_db_url},
+        http::create_router,
+    },
     presentation::state::AppState,
 };
 
@@ -21,7 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await
     .expect("Failed to bind to port");
 
-    let repo_provider = RepoProvider::build_repo_provider(&config.database).await?;
+    let conn = bootstrap(&config.database).await?;
+    let repo_provider = RepoProvider::from_connection(conn).await?;
     let state = AppState::new(repo_provider);
     let router = create_router(state);
 

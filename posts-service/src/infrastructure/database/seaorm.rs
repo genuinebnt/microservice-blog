@@ -43,16 +43,29 @@ impl PostRepository for SeaOrmPostRepository {
         } else {
             tracing::info!("Post not found");
         }
+        let post = entities::post::Entity::find_by_id(id)
+            .one(&self.conn)
+            .await?;
 
         Ok(post)
     }
 
     #[tracing::instrument(skip(self))]
     async fn update(&self, post: Post) -> Result<()> {
+        use sea_orm::{EntityTrait, Set, Unchanged};
         tracing::info!("Updating post: {}", post.title);
 
-        let active_model = entities::post::ActiveModel::from(post);
-        active_model.update(&self.conn).await?;
+        let active_model = entities::post::ActiveModel {
+            id: Unchanged(post.id),
+            title: Set(post.title),
+            content: Set(post.content),
+            created_at: Unchanged(post.created_at),
+            updated_at: Set(chrono::Utc::now().into()),
+        };
+
+        entities::post::Entity::update(active_model)
+            .exec(&self.conn)
+            .await?;
 
         tracing::info!("Post updated successfully");
 
@@ -86,7 +99,7 @@ impl PostRepository for SeaOrmPostRepository {
 
         let posts = entities::post::Entity::find().all(&self.conn).await?;
 
-        tracing::info!("Posts fetched successfully");
+        tracing::info!("{} posts fetched successfully", posts.len());
         Ok(Some(posts))
     }
 }

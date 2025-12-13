@@ -1,26 +1,27 @@
+use common::error::Result;
+use migration::{Migrator, MigratorTrait};
 use std::sync::Arc;
 
-use common::config::DatabaseSettings;
-use common::error::Result;
-
 use crate::domain::repository::DynPostRepository;
-use crate::infrastructure::database::postgres::build_postgres_url;
+use crate::infrastructure::database::types::DatabaseConn;
 
+#[derive(Debug, Clone)]
 pub struct RepoProvider {
     pub posts: DynPostRepository,
 }
 
 impl RepoProvider {
-    pub async fn build_repo_provider(settings: &DatabaseSettings) -> Result<RepoProvider> {
-        let url = build_postgres_url(settings).await?;
-        let posts_repo: DynPostRepository = match settings.backend.as_str() {
-            "seaorm" => {
-                let seaorm_conn = sea_orm::Database::connect(url).await?;
+    pub async fn from_connection(conn: DatabaseConn) -> Result<RepoProvider> {
+        let posts_repo: DynPostRepository = match conn {
+            DatabaseConn::SeaOrm(seaorm_conn) => {
+                Migrator::up(&seaorm_conn, None).await.unwrap();
                 let repo = super::seaorm::SeaOrmPostRepository::new(seaorm_conn);
                 Arc::new(repo) as DynPostRepository
             }
             _ => {
-                return Err(common::error::AppError::InvalidConfiguration);
+                return Err(common::error::AppError::InvalidConfiguration(
+                    "Invalid database backend".to_string(),
+                ));
             }
         };
         Ok(RepoProvider { posts: posts_repo })

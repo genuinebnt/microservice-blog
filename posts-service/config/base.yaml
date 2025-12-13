@@ -3,6 +3,7 @@ application:
   host: 0.0.0.0
 database:
   backend: "seaorm"
+  engine: "postgres"
   username: "postgres"
   password: "password"
   hostname: "localhost"

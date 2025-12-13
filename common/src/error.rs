@@ -35,8 +35,8 @@ pub enum AppError {
     #[error("Database error: {0}")]
     SeaOrmError(sea_orm::DbErr),
 
-    #[error("Invalid configuration")]
-    InvalidConfiguration,
+    #[error("Invalid configuration: {0}")]
+    InvalidConfiguration(String),
 }
 
 impl From<sea_orm::DbErr> for AppError {
@@ -95,11 +95,11 @@ impl IntoResponse for AppError {
                     "Internal Server Error".to_string(),
                 )
             }
-            AppError::InvalidConfiguration => {
+            AppError::InvalidConfiguration(e) => {
                 tracing::error!("Invalid configuration");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal Server Error".to_string(),
+                    e.to_string(),
                 )
             }
         };

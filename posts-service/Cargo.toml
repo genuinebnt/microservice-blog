@@ -30,6 +30,7 @@ tracing-log = "0.2.0"
 uuid = { version = "1.18.1", features = ["v4"] }
 
 common = { path = "../common/" }
+migration = { path = "migration" }
 serde_json = "1.0.145"
 sea-orm = { version = "2.0.0-rc.18", features = [
   "sqlx-postgres",
@@ -37,3 +38,4 @@ sea-orm = { version = "2.0.0-rc.18", features = [
   "macros",
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
+urlencoding = "2.1.3"
