@@ -19,8 +19,5 @@ pub async fn bootstrap(cfg: &DatabaseSettings) -> Result<DatabaseConn> {
                 Ok(DatabaseConn::Sqlx(db))
             }
         },
-        _ => Err(common::error::AppError::InvalidConfiguration(
-            "Invalid database backend".to_string(),
-        )),
     }
 }
