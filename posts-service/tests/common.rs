@@ -154,7 +154,7 @@ pub struct GetPostResponse {
 impl TestApp {
     pub async fn post_post(&self, body: &PostRequest) -> reqwest::Response {
         self.api_client
-            .post(&format!("http://{}/posts", self.address))
+            .post(format!("http://{}/posts", self.address))
             .json(body)
             .send()
             .await
@@ -163,7 +163,7 @@ impl TestApp {
 
     pub async fn get_post(&self, id: Uuid) -> reqwest::Response {
         self.api_client
-            .get(&format!("http://{}/posts/{}", self.address, id))
+            .get(format!("http://{}/posts/{}", self.address, id))
             .send()
             .await
             .expect("Failed to execute request.")
@@ -171,7 +171,7 @@ impl TestApp {
 
     pub async fn list_posts(&self) -> reqwest::Response {
         self.api_client
-            .get(&format!("http://{}/posts", self.address))
+            .get(format!("http://{}/posts", self.address))
             .send()
             .await
             .expect("Failed to execute request.")
@@ -183,7 +183,7 @@ impl TestApp {
         body: &T,
     ) -> reqwest::Response {
         self.api_client
-            .put(&format!("http://{}/posts/{}", self.address, id))
+            .put(format!("http://{}/posts/{}", self.address, id))
             .json(body)
             .send()
             .await
@@ -192,7 +192,7 @@ impl TestApp {
 
     pub async fn delete_post(&self, id: Uuid) -> reqwest::Response {
         self.api_client
-            .delete(&format!("http://{}/posts/{}", self.address, id))
+            .delete(format!("http://{}/posts/{}", self.address, id))
             .send()
             .await
             .expect("Failed to execute request.")

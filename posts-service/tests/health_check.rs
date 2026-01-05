@@ -6,7 +6,7 @@ async fn health_check() {
 
     let client = reqwest::Client::new();
     let response = client
-        .get(&format!("http://{}{}", test_app.address, "/healthz"))
+        .get(format!("http://{}{}", test_app.address, "/healthz"))
         .send()
         .await
         .unwrap();

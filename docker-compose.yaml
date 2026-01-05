@@ -27,6 +27,21 @@ services:
     networks:
       - blog-network
 
+  users-service:
+    build: ./users-service/
+    container_name: users-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL={USERS_DATABASE_URL}
+    ports:
+      - "8002:8002"
+    depends_on:
+      - users-db
+    networks:
+      -blog-network
+
 volumes:
   posts_data:
 
