@@ -11,7 +11,6 @@ use uuid::Uuid;
 use crate::{domain::entities::post::Post, presentation::state::AppState};
 use common::error::Result;
 
-#[tracing::instrument(skip(state))]
 pub async fn list_posts(State(state): State<Arc<AppState>>) -> Json<Vec<Post>> {
     Json(state.repos.posts.list().await.unwrap().unwrap())
 }
@@ -19,10 +18,10 @@ pub async fn list_posts(State(state): State<Arc<AppState>>) -> Json<Vec<Post>> {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreatePostRequest {
     pub title: String,
+    pub author_id: Uuid,
     pub content: String,
 }
 
-#[tracing::instrument(skip(state))]
 pub async fn create_post(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreatePostRequest>,
@@ -30,6 +29,7 @@ pub async fn create_post(
     let post = Post {
         id: Uuid::new_v4(),
         title: payload.title,
+        author_id: payload.author_id,
         content: payload.content,
         created_at: Utc::now().into(),
         updated_at: Utc::now().into(),
@@ -40,12 +40,11 @@ pub async fn create_post(
 
 pub async fn get_post(State(state): State<Arc<AppState>>, path: Path<Uuid>) -> Result<Json<Post>> {
     let post = state.repos.posts.get(path.0).await.unwrap();
-    if post.is_none() {
-        return Err(common::error::AppError::NotFoundError(
+    match post.is_none() {
+        true => Err(common::error::AppError::NotFoundError(
             "Post not found".to_string(),
-        ));
-    } else {
-        Ok(Json(post.unwrap()))
+        )),
+        false => Ok(Json(post.unwrap())),
     }
 }
 

@@ -40,7 +40,7 @@ services:
     depends_on:
       - users-db
     networks:
-      -blog-network
+      - blog-network
 
 volumes:
   posts_data:

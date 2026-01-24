@@ -43,7 +43,8 @@ impl Drop for TestApp {
 pub async fn spawn_app() -> TestApp {
     LazyLock::force(&TRACING);
 
-    let mut config = common::config::get_configuration("config").unwrap();
+    let mut config =
+        common::config::get_configuration::<common::config::Settings>("config").unwrap();
     // Randomize database name
     config.database.database_name = Uuid::new_v4().to_string();
 

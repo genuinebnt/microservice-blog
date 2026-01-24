@@ -8,15 +8,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let subscriber = get_subscriber("users-service".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
 
-    let config = get_configuration("config")?;
+    let config = get_configuration::<common::config::Settings>("config")?;
 
-    let listener = tokio::net::TcpListener::bind(format!(
+    let _listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",
         config.application.host, config.application.port
     ))
     .await
     .expect("Failed to bind to port");
 
-    
     Ok(())
 }

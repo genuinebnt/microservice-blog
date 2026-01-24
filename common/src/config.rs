@@ -39,7 +39,9 @@ pub enum DbEngine {
     Postgres,
 }
 
-pub fn get_configuration(path: impl AsRef<Path>) -> Result<Settings, ConfigError> {
+use serde::de::DeserializeOwned;
+
+pub fn get_configuration<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T, ConfigError> {
     let base_path = std::env::current_dir().expect("Failed to determine current directory");
     let config_dir = base_path.join(path);
 
@@ -53,7 +55,7 @@ pub fn get_configuration(path: impl AsRef<Path>) -> Result<Settings, ConfigError
         .add_source(config::File::from(config_dir.join(environment_filename)))
         .build()?;
 
-    settings.try_deserialize::<Settings>()
+    settings.try_deserialize::<T>()
 }
 
 pub enum Environment {

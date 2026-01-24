@@ -4,7 +4,7 @@ use common::{
 };
 use posts::{
     infrastructure::{
-        database::{bootstrap::bootstrap, factory::RepoProvider, url::build_db_url},
+        database::{bootstrap::bootstrap, factory::RepoProvider},
         http::create_router,
     },
     presentation::state::AppState,
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let subscriber = get_subscriber("posts-service".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
 
-    let config = get_configuration("config")?;
+    let config = get_configuration::<common::config::Settings>("config")?;
 
     let listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",

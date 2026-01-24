@@ -10,6 +10,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
     pub title: String,
+    pub author_id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub content: String,
     pub created_at: DateTimeWithTimeZone,

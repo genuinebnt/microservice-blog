@@ -1,0 +1,26 @@
+[package]
+name = "gateway-service"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "gateway-service"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = "0.8.8"
+async-graphql = { version = "7.0", features = ["chrono", "uuid"] }
+async-graphql-axum = "7.0"
+reqwest = { version = "0.13.1", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+uuid = { version = "1", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+anyhow = "1.0"
+tracing = "0.1"
+
+common = { path = "../common/" }

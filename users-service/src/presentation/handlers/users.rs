@@ -9,7 +9,10 @@ use common::{
     pagination::{PaginatedResponse, Pagination},
 };
 
-use crate::presentation::{responses::ListUserResponse, state::AppState};
+use crate::{
+    domain::entities::user::User,
+    presentation::{responses::ListUserResponse, state::AppState},
+};
 
 pub async fn list_users(
     State(state): State<Arc<AppState>>,
@@ -27,4 +30,12 @@ pub async fn list_users(
         pagination.page_size,
     );
     Ok(Json(paginated_response))
+}
+
+pub async fn create_user(
+    State(state): State<Arc<AppState>>,
+    Json(user): Json<User>,
+) -> Result<Json<User>> {
+    let user = state.repos.users.create_user(user).await?;
+    Ok(Json(user))
 }

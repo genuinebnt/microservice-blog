@@ -40,14 +40,11 @@ impl PostRepository for SeaOrmPostRepository {
 
         if post.is_some() {
             tracing::info!("Post found: {}", post.as_ref().unwrap().title);
+            Ok(post)
         } else {
             tracing::info!("Post not found");
+            Ok(None)
         }
-        let post = entities::post::Entity::find_by_id(id)
-            .one(&self.conn)
-            .await?;
-
-        Ok(post)
     }
 
     #[tracing::instrument(skip(self))]
@@ -58,6 +55,7 @@ impl PostRepository for SeaOrmPostRepository {
         let active_model = entities::post::ActiveModel {
             id: Unchanged(post.id),
             title: Set(post.title),
+            author_id: Set(post.author_id),
             content: Set(post.content),
             created_at: Unchanged(post.created_at),
             updated_at: Set(chrono::Utc::now().into()),

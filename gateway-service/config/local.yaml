@@ -1,0 +1,4 @@
+users-service:
+  host: 127.0.0.1
+posts-service:
+  host: 127.0.0.1

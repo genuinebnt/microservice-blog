@@ -1,0 +1,6 @@
+users-service:
+  port: 8002
+  host: 0.0.0.0
+posts-service:
+  port: 8001
+  host: 0.0.0.0

@@ -1,18 +1,12 @@
 use async_trait::async_trait;
-use axum::Json;
-use common::{
-    error::Result,
-    pagination::{PaginatedResponse, Pagination},
-};
+use common::{error::Result, pagination::Pagination};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{Set, Unchanged},
     ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, PaginatorTrait, QueryFilter,
-    QueryOrder,
+    QueryOrder, TryIntoModel,
 };
 use uuid::Uuid;
-
-const DEFAULT_LIST_LIMIT: u32 = 50;
 
 use crate::domain::{
     entities::{self, user::User},
@@ -33,14 +27,15 @@ impl SeaOrmUserRepository {
 #[async_trait]
 impl UserRepository for SeaOrmUserRepository {
     #[tracing::instrument(skip(self))]
-    async fn create_user(&self, user: User) -> Result<()> {
+    async fn create_user(&self, user: User) -> Result<User> {
         tracing::info!("Creating User: {}", user.username);
 
         let user = entities::user::ActiveModel::from(user);
-        user.insert(&self.conn).await?;
+        let user_model = user.insert(&self.conn).await?;
+        let user: User = user_model.try_into_model()?;
 
         tracing::info!("User created successfully");
-        Ok(())
+        Ok(user)
     }
 
     #[tracing::instrument(skip(self))]
@@ -86,8 +81,6 @@ impl UserRepository for SeaOrmUserRepository {
             id: Unchanged(user.id),
             username: Set(user.username),
             email: Set(user.email),
-            bio: Set(user.bio),
-            avatar_url: Set(user.avatar_url),
             created_at: Unchanged(user.created_at),
             updated_at: Set(chrono::Utc::now().into()),
         };

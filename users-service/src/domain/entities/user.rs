@@ -13,10 +13,6 @@ pub struct Model {
     pub email: String,
     #[sea_orm(column_type = "Text")]
     pub username: String,
-    #[sea_orm(column_type = "Text")]
-    pub bio: Option<String>,
-    #[sea_orm(column_type = "Text")]
-    pub avatar_url: Option<String>,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
 }
