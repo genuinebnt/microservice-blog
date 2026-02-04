@@ -1,0 +1,10 @@
+application:
+  host: 127.0.0.1
+database:
+  hostname: "localhost"
+  port: 5435
+  username: "postgres"
+  password: "postgres"
+  # The test harness randomizes the DB name; this is only the default.
+  database_name: "postgres"
+  require_ssl: false

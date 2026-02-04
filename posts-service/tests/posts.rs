@@ -9,6 +9,7 @@ pub struct CreatePostResponse {
 #[derive(Serialize, Debug)]
 pub struct PostRequest {
     pub title: String,
+    pub author_id: uuid::Uuid,
     pub content: String,
 }
 
@@ -35,6 +36,7 @@ pub async fn create_post_returns_200_for_valid_data() {
     let test_app = common::spawn_app().await;
     let post = PostRequest {
         title: "Test Post".to_string(),
+        author_id: uuid::Uuid::new_v4(),
         content: "Test Content".to_string(),
     };
 
@@ -70,10 +72,12 @@ pub async fn list_posts_returns_valid_list_for_valid_data() {
     let posts = vec![
         PostRequest {
             title: "Test Post 1".to_string(),
+            author_id: uuid::Uuid::new_v4(),
             content: "Test Content 1".to_string(),
         },
         PostRequest {
             title: "Test Post 2".to_string(),
+            author_id: uuid::Uuid::new_v4(),
             content: "Test Content 2".to_string(),
         },
     ];
@@ -107,6 +111,7 @@ pub async fn get_post_returns_200_for_valid_data() {
     let test_app = common::spawn_app().await;
     let post = PostRequest {
         title: "Test Post".to_string(),
+        author_id: uuid::Uuid::new_v4(),
         content: "Test Content".to_string(),
     };
 
@@ -155,6 +160,7 @@ pub async fn update_post_returns_200_for_valid_data() {
     let test_app = common::spawn_app().await;
     let post = PostRequest {
         title: "Test Post".to_string(),
+        author_id: uuid::Uuid::new_v4(),
         content: "Test Content".to_string(),
     };
 

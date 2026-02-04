@@ -1,23 +1,24 @@
-use crate::config::ServiceSettings;
-use crate::domain::repositories::PostRepository;
-use crate::infrastructure::repositories::HttpPostRepository;
+use crate::config::GatewaySettings;
+
 use reqwest::Client;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub post_repository: Arc<dyn PostRepository>,
+    pub http_client: Client,
+    pub posts_service_url: String,
+    pub users_service_url: String,
 }
 
 impl AppState {
-    pub fn new(posts_service_settings: ServiceSettings) -> Self {
-        let client = Client::new();
-        let posts_service_url = posts_service_settings.url();
-
-        let post_repo = HttpPostRepository::new(client, posts_service_url);
+    pub fn new(config: GatewaySettings) -> Self {
+        let http_client = Client::new();
+        let posts_service_url = config.posts_service.url();
+        let users_service_url = config.users_service.url();
 
         Self {
-            post_repository: Arc::new(post_repo),
+            http_client,
+            posts_service_url,
+            users_service_url,
         }
     }
 }

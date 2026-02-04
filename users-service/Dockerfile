@@ -1,26 +1,48 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.91-alpine as chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.91-alpine AS chef
 WORKDIR /app
-RUN apt-get update && apt-get install lld clang -y
+RUN apk add --no-cache lld clang openssl-dev openssl-libs-static
 
-FROM chef as planner
-COPY . .
+FROM chef AS planner
+
+COPY Cargo.toml Cargo.lock ./
+
+COPY common/Cargo.toml common/Cargo.toml
+
+COPY posts-service/Cargo.toml posts-service/Cargo.toml
+COPY posts-service/migration/Cargo.toml posts-service/migration/Cargo.toml
+
+COPY users-service/Cargo.toml users-service/Cargo.toml
+COPY users-service/migration/Cargo.toml users-service/migration/Cargo.toml
+
+COPY gateway-service/Cargo.toml gateway-service/Cargo.toml
+
 RUN cargo chef prepare --recipe-path recipe.json
 
-FROM chef as builder
+FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
+
 COPY . .
-ENV SQLX_OFFLINE true
-RUN cargo build --release --bin users-service
+
+RUN cargo build --release --bin users \
+  && cargo build --release -p users-migration
 
 FROM debian:bullseye-slim AS runtime
 WORKDIR /app
+
 RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends openssl ca-certificates \
-  && apt-get autoremove -y \
+  && apt-get install -y --no-install-recommends \
+  openssl \
+  ca-certificates \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/users-service users-service
-COPY config config
-ENV APP_ENVIRONMENT production
-ENTRYPOINT [ "./users-service" ]
+
+COPY --from=builder /app/target/release/users ./users-service
+COPY --from=builder /app/target/release/users-migration ./users-migration
+
+COPY users-service/config config
+COPY users-service/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+ENV APP_ENVIRONMENT=production
+ENTRYPOINT ["./entrypoint.sh"]

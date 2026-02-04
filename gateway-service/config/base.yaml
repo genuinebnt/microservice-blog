@@ -1,6 +1,11 @@
-users-service:
-  port: 8002
-  host: 0.0.0.0
-posts-service:
+application:
+  port: 8000
+  host: "0.0.0.0"
+
+posts_service:
+  host: "127.0.0.1"
   port: 8001
-  host: 0.0.0.0
+
+users_service:
+  host: "127.0.0.1"
+  port: 8002

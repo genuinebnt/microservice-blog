@@ -1,20 +1,25 @@
 services:
   posts-service:
-    build: ./posts-service/
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: posts-service/Dockerfile
     container_name: posts-service
     restart: always
     env_file:
       - .env
     environment:
-      - DATABASE_URL=${POSTS_DATABASE_URL}
+      DATABASE_URL: ${POSTS_DATABASE_URL}
     ports:
-      - "8001:8001"
+      - "${POSTS_SERVICE_PORT}:8001"
     depends_on:
-      - posts-db
+      posts-db:
+        condition: service_healthy
     networks:
       - blog-network
 
   posts-db:
+    profiles: ["production"]
     image: postgres:17
     container_name: posts-db
     restart: always
@@ -24,26 +29,183 @@ services:
       - "5432:5432"
     volumes:
       - posts_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - blog-network
 
   users-service:
-    build: ./users-service/
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: users-service/Dockerfile
     container_name: users-service
     restart: always
     env_file:
       - .env
     environment:
-      - DATABASE_URL={USERS_DATABASE_URL}
+      DATABASE_URL: ${USERS_DATABASE_URL}
     ports:
-      - "8002:8002"
+      - "${USERS_SERVICE_PORT}:8002"
     depends_on:
-      - users-db
+      users-db:
+        condition: service_healthy
+    networks:
+      - blog-network
+
+  users-db:
+    profiles: ["production"]
+    image: postgres:17
+    container_name: users-db
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  gateway-service:
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: gateway-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      APP_POSTS_SERVICE__HOST: posts-service
+      APP_POSTS_SERVICE__PORT: 8001
+      APP_USERS_SERVICE__HOST: users-service
+      APP_USERS_SERVICE__PORT: 8002
+      APP_APPLICATION__PORT: 8000
+    ports:
+      - "${GATEWAY_PORT}:8000"
+    depends_on:
+      - posts-service
+      - users-service
+    networks:
+      - blog-network
+
+  posts-db-test:
+    image: postgres:17
+    container_name: posts-db-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  users-db-test:
+    image: postgres:17
+    container_name: users-db-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  posts-service-test:
+    build:
+      context: .
+      dockerfile: posts-service/Dockerfile
+    container_name: posts-service-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@posts-db-test:5432/postgres
+      APP_APPLICATION__PORT: 8001
+      APP_DATABASE__HOSTNAME: posts-db-test
+      APP_DATABASE__PORT: 5432
+      APP_DATABASE__USERNAME: postgres
+      APP_DATABASE__PASSWORD: postgres
+      APP_DATABASE__DATABASE_NAME: postgres
+    ports:
+      - "9001:8001"
+    depends_on:
+      posts-db-test:
+        condition: service_healthy
+    networks:
+      - blog-network
+
+  users-service-test:
+    build:
+      context: .
+      dockerfile: users-service/Dockerfile
+    container_name: users-service-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@users-db-test:5432/postgres
+      APP_APPLICATION__PORT: 8002
+      APP_DATABASE__HOSTNAME: users-db-test
+      APP_DATABASE__PORT: 5432
+      APP_DATABASE__USERNAME: postgres
+      APP_DATABASE__PASSWORD: postgres
+      APP_DATABASE__DATABASE_NAME: postgres
+    ports:
+      - "9002:8002"
+    depends_on:
+      users-db-test:
+        condition: service_healthy
+    networks:
+      - blog-network
+
+  gateway-service-test:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: gateway-service-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      APP_POSTS_SERVICE__HOST: posts-service-test
+      APP_POSTS_SERVICE__PORT: 8001
+      APP_USERS_SERVICE__HOST: users-service-test
+      APP_USERS_SERVICE__PORT: 8002
+      APP_APPLICATION__PORT: 8000
+    ports:
+      - "9000:8000"
+    depends_on:
+      - posts-service-test
+      - users-service-test
     networks:
       - blog-network
 
 volumes:
   posts_data:
+  users_data:
 
 networks:
   blog-network:

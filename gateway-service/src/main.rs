@@ -18,7 +18,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_subscriber(subscriber);
 
     let config = get_configuration::<GatewaySettings>("config")?;
-    let state = AppState::new(config.posts_service);
+    let state = AppState::new(config.clone());
 
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
         .data(state.clone())

@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -38,9 +38,11 @@ impl MigrationTrait for Migration {
 
 #[derive(DeriveIden)]
 enum User {
-    #[sea_orm(table_name = "users")]
+    #[sea_orm(iden = "users")]
     Table,
     Id,
-    Name,
+    Username,
     Email,
+    CreatedAt,
+    UpdatedAt,
 }

@@ -1,3 +1,10 @@
 [workspace]
-members = ["posts-service", "users-service", "common", "gateway-service"]
+members = [
+    "posts-service",
+    "posts-service/migration",
+    "users-service",
+    "users-service/migration",
+    "common",
+    "gateway-service",
+]
 resolver = "2"

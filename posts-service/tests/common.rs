@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use anyhow::Context;
 use common::telemetry;
 use posts::{
     infrastructure::{
@@ -43,6 +44,13 @@ impl Drop for TestApp {
 pub async fn spawn_app() -> TestApp {
     LazyLock::force(&TRACING);
 
+    // Make integration tests use `config/test.yaml` (see `docker-compose.yaml` -> `posts-db-test`).
+    // SAFETY: tests are executed in a separate process; we set this env var before spinning up
+    // the application and before spawning any threads in the test harness.
+    unsafe {
+        std::env::set_var("APP_ENVIRONMENT", "test");
+    }
+
     let mut config =
         common::config::get_configuration::<common::config::Settings>("config").unwrap();
     // Randomize database name
@@ -82,43 +90,73 @@ pub async fn spawn_app() -> TestApp {
 async fn configure_database(config: &common::config::DatabaseSettings) {
     use sea_orm::{ConnectionTrait, Database};
 
-    // Connect to "postgres" database to create the new one
     let mut maintenance_config = config.clone();
     maintenance_config.database_name = "postgres".to_string();
 
     let db_url = posts::infrastructure::database::url::build_db_url(&maintenance_config)
         .await
+        .context(format!(
+            "Failed to build database url for maintenance_config: {:?}",
+            maintenance_config
+        ))
         .unwrap();
-    let db = Database::connect(db_url).await.unwrap();
+
+    let db = Database::connect(&db_url)
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to connect to Postgres for tests at db_url: {db_url}\n\
+\n\
+Hint: start the test database with:\n\
+  docker compose --profile test up -d posts-db-test\n"
+            )
+        })
+        .unwrap();
 
     db.execute_unprepared(&format!("CREATE DATABASE \"{}\";", config.database_name))
         .await
+        .context(format!("Failed to create database for db_url: {}", &db_url))
         .unwrap();
 }
 
 async fn delete_database(config: &common::config::DatabaseSettings, db_name: &str) {
     use sea_orm::{ConnectionTrait, Database};
 
-    // Connect to "postgres" database to drop the test one
     let mut maintenance_config = config.clone();
     maintenance_config.database_name = "postgres".to_string();
 
     let db_url = posts::infrastructure::database::url::build_db_url(&maintenance_config)
         .await
+        .context(format!(
+            "Failed to build database url for maintenance_config: {:?}",
+            maintenance_config
+        ))
         .unwrap();
-    let db = Database::connect(db_url).await.unwrap();
 
-    // Terminate existing connections first (important for Postgres)
+    let db = Database::connect(&db_url)
+        .await
+        .context(format!(
+            "Failed to connect to database for db_url: {}",
+            &db_url
+        ))
+        .unwrap();
+
     let _ = db
         .execute_unprepared(&format!(
             "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';",
             db_name
         ))
-        .await;
+        .await
+        .context(format!(
+            "Failed to terminate connections for db_name: {}",
+            db_name
+        ))
+        .unwrap();
 
     db.execute_unprepared(&format!("DROP DATABASE \"{}\";", db_name))
         .await
-        .expect("Failed to drop database");
+        .context(format!("Failed to drop database for db_name: {}", db_name))
+        .unwrap();
 }
 
 use serde::{Deserialize, Serialize};
@@ -131,6 +169,7 @@ pub struct CreatePostResponse {
 #[derive(Serialize, Debug)]
 pub struct PostRequest {
     pub title: String,
+    pub author_id: uuid::Uuid,
     pub content: String,
 }
 

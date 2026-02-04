@@ -13,6 +13,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(ColumnDef::new(Post::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Post::Title).string().not_null())
+                    .col(ColumnDef::new(Post::AuthorId).uuid().not_null())
                     .col(ColumnDef::new(Post::Content).text().not_null())
                     .col(
                         ColumnDef::new(Post::CreatedAt)
@@ -41,6 +42,7 @@ enum Post {
     #[sea_orm(iden = "posts")]
     Table,
     Id,
+    AuthorId,
     Title,
     Content,
     CreatedAt,
