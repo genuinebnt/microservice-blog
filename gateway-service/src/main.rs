@@ -5,7 +5,7 @@ use common::{
 };
 use gateway_service::{
     config::GatewaySettings,
-    presentation::{query::QueryRoot, router::create_router, state::AppState},
+    presentation::{query::QueryRoot, http::create_router, state::AppState},
 };
 
 #[tokio::main]

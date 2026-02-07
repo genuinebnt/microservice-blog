@@ -24,7 +24,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
 
-RUN cargo build --release --bin users \
+RUN cargo build --release --bin users-service \
   && cargo build --release -p users-migration
 
 FROM debian:bullseye-slim AS runtime
@@ -37,7 +37,7 @@ RUN apt-get update -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/users ./users-service
+COPY --from=builder /app/target/release/users-service ./users-service
 COPY --from=builder /app/target/release/users-migration ./users-migration
 
 COPY users-service/config config

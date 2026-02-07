@@ -75,6 +75,22 @@ services:
     networks:
       - blog-network
 
+  auth-service:
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - "${AUTH_DATABASE_URL}"
+    ports:
+      - "${AUTH_SERVICE_PORT}:8003"
+    networks:
+      - blog-network
+
   gateway-service:
     profiles: ["production"]
     build:

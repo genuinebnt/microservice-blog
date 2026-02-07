@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::path::Path;
 
 use config::ConfigError;
@@ -13,6 +14,18 @@ pub struct Settings {
 pub struct ApplicationSettings {
     pub host: String,
     pub port: u16,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ServiceSettings {
+    pub host: String,
+    pub port: u16,
+}
+
+impl ServiceSettings {
+    pub fn url(&self) -> String {
+        format!("http:{}/{}", self.host, self.port)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
