@@ -1,4 +1,4 @@
-use crate::infrastructure::database::factory::RepoProvider;
+use crate::infrastructure::database::RepoProvider;
 
 pub struct AppState {
     pub repos: RepoProvider,

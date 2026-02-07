@@ -2,9 +2,9 @@ use common::{
     config::get_configuration,
     telemetry::{get_subscriber, init_subscriber},
 };
-use posts::{
+use posts_service::{
     infrastructure::{
-        database::{bootstrap::bootstrap, factory::RepoProvider},
+        database::{RepoProvider, bootstrap},
         http::create_router,
     },
     presentation::state::AppState,

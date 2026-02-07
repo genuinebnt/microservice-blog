@@ -6,7 +6,7 @@ use axum::{
 };
 
 use crate::presentation::{
-    handlers::posts::{create_post, delete_post, get_post, list_posts, update_post},
+    handlers::{create_post, delete_post, get_post, list_posts, update_post},
     state::AppState,
 };
 

@@ -4,22 +4,18 @@ use axum::{
     response::IntoResponse,
 };
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::{domain::entities::post::Post, presentation::state::AppState};
+use crate::presentation::state::AppState;
+use crate::{
+    domain::{Post, PostId},
+    presentation::handlers::CreatePostRequest,
+};
 use common::error::Result;
 
 pub async fn list_posts(State(state): State<Arc<AppState>>) -> Json<Vec<Post>> {
     Json(state.repos.posts.list().await.unwrap().unwrap())
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CreatePostRequest {
-    pub title: String,
-    pub author_id: Uuid,
-    pub content: String,
 }
 
 pub async fn create_post(
@@ -38,8 +34,11 @@ pub async fn create_post(
     Json(post)
 }
 
-pub async fn get_post(State(state): State<Arc<AppState>>, path: Path<Uuid>) -> Result<Json<Post>> {
-    let post = state.repos.posts.get(path.0).await.unwrap();
+pub async fn get_post(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<PostId>,
+) -> Result<Json<Post>> {
+    let post = state.repos.posts.get(id.into()).await?;
     match post.is_none() {
         true => Err(common::error::AppError::NotFoundError(
             "Post not found".to_string(),
@@ -53,7 +52,7 @@ pub async fn update_post(State(state): State<Arc<AppState>>, Json(post): Json<Po
     Ok(())
 }
 
-pub async fn delete_post(State(state): State<Arc<AppState>>, path: Path<Uuid>) -> Result<()> {
-    state.repos.posts.delete(path.0).await.unwrap();
+pub async fn delete_post(State(state): State<Arc<AppState>>, Path(id): Path<PostId>) -> Result<()> {
+    state.repos.posts.delete(id.into()).await.unwrap();
     Ok(())
 }

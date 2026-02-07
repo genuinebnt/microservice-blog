@@ -1,4 +1,5 @@
 use crate::domain::{
+    PostId,
     entities::{self, post::Post},
     repository::PostRepository,
 };
@@ -31,10 +32,10 @@ impl PostRepository for SeaOrmPostRepository {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get(&self, id: uuid::Uuid) -> Result<Option<Post>> {
+    async fn get(&self, id: PostId) -> Result<Option<Post>> {
         tracing::info!("Getting post: {}", id);
 
-        let post = entities::post::Entity::find_by_id(id)
+        let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
 
@@ -71,10 +72,10 @@ impl PostRepository for SeaOrmPostRepository {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn delete(&self, id: uuid::Uuid) -> Result<()> {
+    async fn delete(&self, id: PostId) -> Result<()> {
         tracing::info!("Deleting post: {}", id);
 
-        let post = entities::post::Entity::find_by_id(id)
+        let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
 

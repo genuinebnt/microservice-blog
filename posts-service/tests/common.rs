@@ -2,9 +2,9 @@ use std::sync::LazyLock;
 
 use anyhow::Context;
 use common::telemetry;
-use posts::{
+use posts_service::{
     infrastructure::{
-        database::{bootstrap::bootstrap, factory::RepoProvider},
+        database::{RepoProvider, bootstrap, build_db_url},
         http::create_router,
     },
     presentation::state::AppState,
@@ -93,7 +93,7 @@ async fn configure_database(config: &common::config::DatabaseSettings) {
     let mut maintenance_config = config.clone();
     maintenance_config.database_name = "postgres".to_string();
 
-    let db_url = posts::infrastructure::database::url::build_db_url(&maintenance_config)
+    let db_url = build_db_url(&maintenance_config)
         .await
         .context(format!(
             "Failed to build database url for maintenance_config: {:?}",
@@ -125,7 +125,7 @@ async fn delete_database(config: &common::config::DatabaseSettings, db_name: &st
     let mut maintenance_config = config.clone();
     maintenance_config.database_name = "postgres".to_string();
 
-    let db_url = posts::infrastructure::database::url::build_db_url(&maintenance_config)
+    let db_url = build_db_url(&maintenance_config)
         .await
         .context(format!(
             "Failed to build database url for maintenance_config: {:?}",

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::Router;
 
 use crate::presentation::{
-    routes::{health::health_check_router, posts::posts_router},
+    routes::{health_check_router, posts_router},
     state::AppState,
 };
 

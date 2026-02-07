@@ -24,7 +24,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
 
-RUN cargo build --release --bin posts \
+RUN cargo build --release --bin posts-service \
   && cargo build --release -p posts-migration
 
 FROM debian:bullseye-slim AS runtime
@@ -37,7 +37,7 @@ RUN apt-get update -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/posts ./posts-service
+COPY --from=builder /app/target/release/posts-service ./posts-service
 COPY --from=builder /app/target/release/posts-migration ./posts-migration
 
 COPY posts-service/config config
