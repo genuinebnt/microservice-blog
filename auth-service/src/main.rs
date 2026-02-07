@@ -17,11 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await
     .expect("Failed to bind to port");
 
-    let router = create_router(state);
-
     tracing::info!("server starting on port: {}...", config.application.port);
-
-    axum::serve(listener, router).await?;
 
     Ok(())
 }
