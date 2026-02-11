@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = get_configuration::<common::config::Settings>("config")?;
 
-    let listener = tokio::net::TcpListener::bind(format!(
+    let _listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",
         config.application.host, config.application.port
     ))

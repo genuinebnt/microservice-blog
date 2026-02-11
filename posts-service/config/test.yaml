@@ -8,3 +8,7 @@ database:
   # The test harness randomizes the DB name; this is only the default.
   database_name: "postgres"
   require_ssl: false
+cache:
+  redis:
+    hostname: localhost
+    port: 6380

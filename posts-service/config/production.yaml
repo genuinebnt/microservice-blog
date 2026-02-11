@@ -2,3 +2,7 @@ application:
   host: 0.0.0.0
 database:
   require_ssl: false
+cache:
+  redis:
+    hostname: redis
+    port: 6379

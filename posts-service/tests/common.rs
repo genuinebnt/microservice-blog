@@ -67,7 +67,9 @@ pub async fn spawn_app() -> TestApp {
     let addr = listener.local_addr().unwrap();
 
     let conn = bootstrap(&config.database).await.unwrap();
-    let repo_provider = RepoProvider::from_connection(conn).await.unwrap();
+    let repo_provider = RepoProvider::from_connection(conn, &config.cache)
+        .await
+        .unwrap();
     let state = AppState::new(repo_provider.clone());
     let router = create_router(state);
 

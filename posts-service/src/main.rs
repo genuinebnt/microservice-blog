@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .expect("Failed to bind to port");
 
     let conn = bootstrap(&config.database).await?;
-    let repo_provider = RepoProvider::from_connection(conn).await?;
+    let repo_provider = RepoProvider::from_connection(conn, &config.cache).await?;
     let state = AppState::new(repo_provider);
     let router = create_router(state);
 

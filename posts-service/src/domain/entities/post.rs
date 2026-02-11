@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 use sea_orm::entity::prelude::*;
 
 #[sea_orm::model]
-#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, TypedBuilder)]
 #[sea_orm(table_name = "posts")]
 pub struct Model {
     #[sea_orm(primary_key)]

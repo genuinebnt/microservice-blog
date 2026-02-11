@@ -20,38 +20,21 @@ impl SeaOrmPostRepository {
 
 #[async_trait]
 impl PostRepository for SeaOrmPostRepository {
-    #[tracing::instrument(skip(self))]
     async fn create(&self, post: Post) -> Result<()> {
-        tracing::info!("Creating post: {}", post.title);
-
         let active_model = entities::post::ActiveModel::from(post);
         active_model.insert(&self.conn).await?;
-
-        tracing::info!("Post created successfully");
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
     async fn get(&self, id: PostId) -> Result<Option<Post>> {
-        tracing::info!("Getting post: {}", id);
-
         let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
-
-        if post.is_some() {
-            tracing::info!("Post found: {}", post.as_ref().unwrap().title);
-            Ok(post)
-        } else {
-            tracing::info!("Post not found");
-            Ok(None)
-        }
+        Ok(post)
     }
 
-    #[tracing::instrument(skip(self))]
     async fn update(&self, post: Post) -> Result<()> {
         use sea_orm::{EntityTrait, Set, Unchanged};
-        tracing::info!("Updating post: {}", post.title);
 
         let active_model = entities::post::ActiveModel {
             id: Unchanged(post.id),
@@ -66,39 +49,26 @@ impl PostRepository for SeaOrmPostRepository {
             .exec(&self.conn)
             .await?;
 
-        tracing::info!("Post updated successfully");
-
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
     async fn delete(&self, id: PostId) -> Result<()> {
-        tracing::info!("Deleting post: {}", id);
-
         let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
 
         if post.is_none() {
-            tracing::info!("Post not found");
             return Err(common::error::AppError::NotFoundError(
                 "Post not found".to_string(),
             ));
         }
 
         post.unwrap().delete(&self.conn).await?;
-        tracing::info!("Post deleted successfully");
-
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
     async fn list(&self) -> Result<Option<Vec<Post>>> {
-        tracing::info!("Fetching all posts");
-
         let posts = entities::post::Entity::find().all(&self.conn).await?;
-
-        tracing::info!("{} posts fetched successfully", posts.len());
         Ok(Some(posts))
     }
 }

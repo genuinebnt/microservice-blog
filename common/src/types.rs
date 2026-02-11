@@ -1,7 +1,7 @@
 use std::{fmt, marker::PhantomData};
 
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Id<T>(pub Uuid, #[serde(skip)] PhantomData<T>);

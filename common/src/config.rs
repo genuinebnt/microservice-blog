@@ -7,12 +7,79 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
+    pub cache: CacheSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApplicationSettings {
     pub host: String,
     pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheSettings {
+    #[serde(default = "default_max_capacity")]
+    pub max_capacity: u64,
+    #[serde(default = "default_ttl_secs")]
+    pub ttl_secs: u64,
+    #[serde(default = "default_tti_secs")]
+    pub tti_secs: u64,
+    pub redis: Option<RedisSettings>,
+}
+
+fn default_max_capacity() -> u64 {
+    10_000
+}
+fn default_ttl_secs() -> u64 {
+    300
+}
+fn default_tti_secs() -> u64 {
+    60
+}
+
+impl Default for CacheSettings {
+    fn default() -> Self {
+        Self {
+            max_capacity: default_max_capacity(),
+            ttl_secs: default_ttl_secs(),
+            tti_secs: default_tti_secs(),
+            redis: None,
+        }
+    }
+}
+
+impl CacheSettings {
+    pub fn ttl(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.ttl_secs)
+    }
+
+    pub fn tti(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(self.tti_secs)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RedisSettings {
+    pub hostname: String,
+    pub port: u16,
+    #[serde(default)]
+    pub username: Option<String>,
+    #[serde(default)]
+    pub password: Option<String>,
+    #[serde(default)]
+    pub database: Option<u8>,
+}
+
+impl RedisSettings {
+    pub fn url(&self) -> String {
+        let auth = match (&self.username, &self.password) {
+            (Some(user), Some(pass)) => format!("{}:{}@", user, pass),
+            (None, Some(pass)) => format!(":{}@", pass),
+            _ => String::new(),
+        };
+        let db = self.database.map(|d| format!("/{}", d)).unwrap_or_default();
+        format!("redis://{}{}:{}{}", auth, self.hostname, self.port, db)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]

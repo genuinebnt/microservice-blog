@@ -15,6 +15,8 @@ services:
     depends_on:
       posts-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - blog-network
 
@@ -31,6 +33,23 @@ services:
       - posts_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  redis:
+    profiles: ["production"]
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -133,6 +152,21 @@ services:
     networks:
       - blog-network
 
+  redis-test:
+    image: redis:7-alpine
+    container_name: redis-test
+    profiles: ["test"]
+    restart: always
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
   users-db-test:
     image: postgres:17
     container_name: users-db-test
@@ -222,6 +256,7 @@ services:
 volumes:
   posts_data:
   users_data:
+  redis_data:
 
 networks:
   blog-network:

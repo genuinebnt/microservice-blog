@@ -15,3 +15,7 @@ database:
   idle_timeout: 600
   max_lifetime: 1800
   require_ssl: false
+cache:
+  max_capacity: 10000
+  ttl_secs: 300
+  tti_secs: 60
