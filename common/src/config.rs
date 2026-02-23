@@ -8,6 +8,7 @@ pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
     pub cache: CacheSettings,
+    pub pubsub: PubSubSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -96,20 +97,12 @@ impl ServiceSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseSettings {
-    pub backend: DbBackend,
     pub engine: DbEngine,
     pub username: String,
     pub password: String,
     pub hostname: String,
     pub port: u16,
     pub database_name: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum DbBackend {
-    Seaorm,
-    Sqlx,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -172,4 +165,20 @@ impl TryFrom<String> for Environment {
             )),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PubSubSettings {
+    pub project_id: String,
+    pub topic: String,
+    #[serde(default)]
+    pub subscription: Option<String>,
+    #[serde(default)]
+    pub use_emulator: bool,
+    #[serde(default = "default_emulator_host")]
+    pub emulator_host: String,
+}
+
+fn default_emulator_host() -> String {
+    "localhost:8085".to_string()
 }

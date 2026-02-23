@@ -3,6 +3,8 @@ pub mod config;
 pub mod db;
 pub mod error;
 pub mod macros;
+pub mod outbox;
 pub mod pagination;
+pub mod pubsub;
 pub mod telemetry;
 pub mod types;

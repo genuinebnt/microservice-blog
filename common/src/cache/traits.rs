@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Serialize, de::DeserializeOwned};
 
 #[async_trait]
-pub trait Cache: Send + Sync {
+pub trait Cache: Send + Sync + 'static {
     async fn get_str(&self, key: &str) -> Option<String>;
     async fn set_str(&self, key: &str, value: &str, ttl: Duration);
     async fn delete_str(&self, key: &str);

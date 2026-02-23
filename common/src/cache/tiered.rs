@@ -19,7 +19,7 @@ impl std::fmt::Debug for TieredCache {
 }
 
 impl TieredCache {
-    pub fn new(l1: impl Cache + 'static, ttl: Duration) -> Self {
+    pub fn new(l1: impl Cache, ttl: Duration) -> Self {
         Self {
             l1: Box::new(l1),
             l2: None,
@@ -27,7 +27,7 @@ impl TieredCache {
         }
     }
 
-    pub fn add_l2(mut self, l2: impl Cache + 'static) -> Self {
+    pub fn add_l2(mut self, l2: impl Cache) -> Self {
         self.l2 = Some(Box::new(l2));
         self
     }
@@ -41,14 +41,13 @@ impl Cache for TieredCache {
             return Some(value);
         }
 
-        if let Some(ref l2) = self.l2 {
-            if let Some(value) = l2.get_str(key).await {
-                tracing::debug!(key = %key, "Cache L2 hit, promoting to L1");
-                self.l1.set_str(key, &value, self.l1_ttl).await;
-                return Some(value);
-            }
+        if let Some(ref l2) = self.l2
+            && let Some(value) = l2.get_str(key).await
+        {
+            tracing::debug!(key = %key, "Cache L2 hit, promoting to L1");
+            self.l1.set_str(key, &value, self.l1_ttl).await;
+            return Some(value);
         }
-
         tracing::debug!(key = %key, "Cache miss");
         None
     }

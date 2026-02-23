@@ -4,19 +4,12 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use sqlx::migrate::MigrateError;
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, AppError>;
 
 #[derive(Error, Debug)]
 pub enum AppError {
-    #[error("Database error: {0}")]
-    SqlxError(#[from] sqlx::Error),
-
-    #[error("Migration: {0}")]
-    MigrationError(#[from] MigrateError),
-
     #[error("Not found: {0}")]
     NotFoundError(String),
 
@@ -37,6 +30,12 @@ pub enum AppError {
 
     #[error("Invalid configuration: {0}")]
     InvalidConfiguration(String),
+
+    #[error("Pub/Sub error: {0}")]
+    PubSubError(String),
+
+    #[error("Serialization error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
 }
 
 impl From<sea_orm::DbErr> for AppError {
@@ -45,7 +44,7 @@ impl From<sea_orm::DbErr> for AppError {
             sea_orm::DbErr::RecordNotFound(msg) => AppError::NotFoundError(msg),
             sea_orm::DbErr::Query(sea_orm::RuntimeErr::SqlxError(e))
                 if e.as_database_error()
-                    .map_or(false, |e| e.is_unique_violation()) =>
+                    .is_some_and(|e| e.is_unique_violation()) =>
             {
                 AppError::ConflictError(e.as_database_error().unwrap().message().to_string())
             }
@@ -63,20 +62,6 @@ pub struct ErrorResponse {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match &self {
-            AppError::SqlxError(e) => {
-                tracing::error!("SQLx error: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal Server Error".to_string(),
-                )
-            }
-            AppError::MigrationError(e) => {
-                tracing::error!("Migration error: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal Server Error".to_string(),
-                )
-            }
             AppError::NotFoundError(e) => (StatusCode::NOT_FOUND, e.to_string()),
             AppError::ValidationError(e) => (StatusCode::BAD_REQUEST, e.to_string()),
             AppError::ConflictError(e) => (StatusCode::CONFLICT, e.to_string()),
@@ -97,9 +82,20 @@ impl IntoResponse for AppError {
             }
             AppError::InvalidConfiguration(e) => {
                 tracing::error!("Invalid configuration");
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            }
+            AppError::PubSubError(e) => {
+                tracing::error!("Pub/Sub error: {:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    e.to_string(),
+                    "Internal Server Error".to_string(),
+                )
+            }
+            AppError::SerdeJsonError(e) => {
+                tracing::error!("Serialization error: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal Server Error".to_string(),
                 )
             }
         };
