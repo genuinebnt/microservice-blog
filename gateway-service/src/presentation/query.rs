@@ -22,14 +22,16 @@ impl QueryRoot {
         .map_err(|e| AppError::InternalServerError(e.into()))?;
 
         if !post_response.status().is_success() {
-            return Err(AppError::InternalServerError(
-                anyhow::anyhow!("Posts service error: {}", post_response.status()).into(),
-            ));
+            return Err(AppError::InternalServerError(anyhow::anyhow!(
+                "Posts service error: {}",
+                post_response.status()
+            )));
         }
         if !user_response.status().is_success() {
-            return Err(AppError::InternalServerError(
-                anyhow::anyhow!("Users service error: {}", user_response.status()).into(),
-            ));
+            return Err(AppError::InternalServerError(anyhow::anyhow!(
+                "Users service error: {}",
+                user_response.status()
+            )));
         }
 
         let (posts, users_response) = tokio::try_join!(

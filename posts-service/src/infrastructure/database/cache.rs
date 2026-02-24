@@ -25,21 +25,21 @@ impl<C: CacheExt + Send + Sync + Debug> CachedPostRepository<C> {
 
 #[async_trait]
 impl<C: CacheExt + Send + Sync + Debug + 'static> PostRepository for CachedPostRepository<C> {
-    async fn create(&self, post: Post) -> Result<()> {
+    async fn create_post(&self, post: Post) -> Result<()> {
         let key = Self::cache_key(&post.id.into());
-        self.inner.create(post.clone()).await?;
+        self.inner.create_post(post.clone()).await?;
         self.cache.set(&key, &post, self.ttl).await;
         Ok(())
     }
 
-    async fn get(&self, id: PostId) -> Result<Option<Post>> {
+    async fn get_post(&self, id: PostId) -> Result<Option<Post>> {
         let key = Self::cache_key(&id);
 
         if let Some(post) = self.cache.get::<_, Post>(&key).await {
             return Ok(Some(post));
         }
 
-        let post = self.inner.get(id).await?;
+        let post = self.inner.get_post(id).await?;
 
         if let Some(ref p) = post {
             self.cache.set(&key, p, self.ttl).await;
@@ -48,21 +48,21 @@ impl<C: CacheExt + Send + Sync + Debug + 'static> PostRepository for CachedPostR
         Ok(post)
     }
 
-    async fn update(&self, post: Post) -> Result<()> {
+    async fn update_post(&self, post: Post) -> Result<()> {
         let key = Self::cache_key(&post.id.into());
-        self.inner.update(post.clone()).await?;
+        self.inner.update_post(post.clone()).await?;
         self.cache.set(&key, &post, self.ttl).await;
         Ok(())
     }
 
-    async fn delete(&self, id: PostId) -> Result<()> {
+    async fn delete_post(&self, id: PostId) -> Result<()> {
         let key = Self::cache_key(&id);
-        self.inner.delete(id).await?;
+        self.inner.delete_post(id).await?;
         self.cache.delete(&key).await;
         Ok(())
     }
 
-    async fn list(&self) -> Result<Option<Vec<Post>>> {
-        self.inner.list().await
+    async fn list_posts(&self) -> Result<Option<Vec<Post>>> {
+        self.inner.list_posts().await
     }
 }

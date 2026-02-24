@@ -9,3 +9,7 @@ posts_service:
 users_service:
   host: "127.0.0.1"
   port: 8002
+
+notification_service:
+  host: "127.0.0.1"
+  port: 8004

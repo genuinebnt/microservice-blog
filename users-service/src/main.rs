@@ -4,7 +4,7 @@ use common::{
 };
 use users_service::{
     infrastructure::{
-        database::{bootstrap::bootstrap, factory::RepoProvider},
+        database::{bootstrap::bootstrap_outbox, bootstrap_db, factory::RepoProvider},
         http::create_router,
     },
     presentation::state::AppState,
@@ -24,8 +24,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await
     .expect("Failed to bind to port");
 
-    let conn = bootstrap(&config.database).await?;
-    let repo_provider = RepoProvider::from_connection(conn).await?;
+    let conn = bootstrap_db(&config.database).await?;
+    let repo_provider = RepoProvider::from_connection(conn.clone(), &config.cache).await?;
+
+    let outbox_poller = bootstrap_outbox(conn, &config.pubsub).await?;
+    outbox_poller.spawn();
+
     let state = AppState::new(repo_provider);
     let router = create_router(state);
 

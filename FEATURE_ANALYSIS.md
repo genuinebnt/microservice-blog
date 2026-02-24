@@ -3649,28 +3649,449 @@ impl GCounter {
 
 ---
 
+### 🟣 Phase 6: Production-Inspired Features (From Medium, Substack, Dev.to, Ghost, Hashnode)
+
+#### 12. **Applause Protocol** (Medium-Style Clap Batching)
+
+**Status**: Not implemented
+
+- ❌ **Debounced clap writes**
+  - Client sends rapid claps (1-50 per post)
+  - Debounce on client (300ms window)
+  - Batch write to DB (single UPDATE per session)
+  - Async aggregation to post total
+- ❌ **Distributed counter at scale**
+  - Per-user clap tracking (who clapped what)
+  - Sharded counter to avoid write hotspots
+  - Eventually consistent total visible to readers
+- ❌ **Clap analytics**
+  - Clap velocity (claps per minute as engagement signal)
+  - Average claps per reader (quality signal)
+
+#### 13. **Reading Time Estimation with Heuristics**
+
+**Status**: Not implemented
+
+- ❌ **Smart word count**
+  - Base rate: 238 words/minute (average adult reading speed)
+  - Image penalty: +12 seconds per image (first image), decreasing to +3s
+  - Code block penalty: slower reading rate for code (150 wpm)
+  - Embedded content: +10s per embed (YouTube, CodePen, etc.)
+- ❌ **Content analysis**
+  - Detect code blocks, images, embeds at save time
+  - Store estimated reading time in post metadata
+  - Recalculate on update
+
+#### 14. **Friend Links** (Paywall Bypass)
+
+**Status**: Not implemented
+
+- ❌ **Shareable bypass links**
+  - Generate unique token per post per author
+  - Token grants unlimited reads regardless of paywall
+  - Expiry (optional, e.g., 30 days)
+  - Track how many reads came via friend link
+- ❌ **Token management**
+  - Authors can generate/revoke friend links
+  - Rate limit: max 10 active friend links per post
+
+#### 15. **Content Graph & Related Posts**
+
+**Status**: Not implemented
+
+- ❌ **"Read next" tracking**
+  - Track user reading sequences (post A → post B)
+  - Build co-read graph (posts frequently read together)
+  - Weight edges by transition frequency
+- ❌ **Related post recommendations**
+  - Graph-based: posts with high co-read scores
+  - Content-based: TF-IDF or embedding similarity
+  - Collaborative filtering: "readers who liked X also liked Y"
+- ❌ **Knowledge graph**
+  - Extract topics/entities from posts
+  - Build topic → post relationships
+  - Surface topic pages with top posts
+
+#### 16. **A/B Tested Headlines**
+
+**Status**: Not implemented
+
+- ❌ **Multi-variant titles**
+  - Authors submit 2-3 headline variants
+  - System randomly serves variants to readers
+  - Track CTR (click-through rate) per variant
+  - Auto-select winner after N impressions (multi-armed bandit)
+- ❌ **Statistical significance**
+  - Chi-squared test or Bayesian approach
+  - Minimum sample size before declaring winner
+  - Dashboard showing variant performance
+
+#### 17. **Email Delivery Pipeline** (Substack-Style)
+
+**Status**: Not implemented
+
+- ❌ **Fan-out architecture**
+  - Publish event triggers email fan-out
+  - Partition subscribers into batches (100-500 per batch)
+  - Rate limit sending (respect SES/SendGrid limits)
+  - Priority queue (paid subscribers first)
+- ❌ **Delivery reliability**
+  - Retry with exponential backoff
+  - Bounce handling (hard/soft bounce tracking)
+  - Complaint handling (auto-unsubscribe on complaints)
+  - Sender reputation monitoring
+- ❌ **Email analytics**
+  - Open tracking (tracking pixel)
+  - Click tracking (link rewriting)
+  - Unsubscribe tracking
+  - Delivery rate dashboard
+
+#### 18. **Custom Domains per Publication**
+
+**Status**: Not implemented
+
+- ❌ **Domain management**
+  - Publication owners add custom domain
+  - DNS verification (CNAME or TXT record)
+  - Automatic SSL via Let's Encrypt / ACME protocol
+  - Reverse proxy routing based on Host header
+- ❌ **Multi-tenant routing**
+  - Gateway inspects Host header
+  - Routes to correct publication context
+  - Serve correct branding/theme per domain
+
+#### 19. **Liquid Tags / Custom Embeds** (Dev.to-Style)
+
+**Status**: Not implemented
+
+- ❌ **Custom embed syntax**
+  - `{% youtube dQw4... %}` → embedded YouTube player
+  - `{% github user/repo %}` → repo card with stars/description
+  - `{% codepen user/pen %}` → interactive CodePen embed
+  - `{% tweet 12345 %}` → rendered tweet card
+- ❌ **Embed processing pipeline**
+  - Parse custom tags at save time
+  - Fetch metadata from external APIs (oEmbed protocol)
+  - Cache embed metadata (TTL: 24h)
+  - Render to HTML at read time
+
+#### 20. **Webmentions** (W3C Cross-Site Federation)
+
+**Status**: Not implemented
+
+- ❌ **Webmention receiver**
+  - Endpoint: `POST /webmention`
+  - Validate source URL actually links to target
+  - Store as cross-site comment/like/repost
+  - Render on post page
+- ❌ **Webmention sender**
+  - On post publish, discover webmention endpoints in linked pages
+  - Send webmention notifications
+  - Track sent/received webmentions
+- ❌ **ActivityPub integration** (optional)
+  - Federate posts to Mastodon/Fediverse
+  - Receive federated replies as comments
+
+#### 21. **Canonical URL Management**
+
+**Status**: Not implemented
+
+- ❌ **Cross-posting support**
+  - Set canonical URL when importing content
+  - `<link rel="canonical">` in HTML head
+  - Original source attribution
+  - Auto-import from RSS feed
+- ❌ **SEO-safe syndication**
+  - Prevent duplicate content penalty
+  - Track which posts are original vs cross-posted
+
+#### 22. **Badge & Achievement System** (Gamification)
+
+**Status**: Not implemented
+
+- ❌ **Achievement tracking**
+  - Event-driven: listen for qualifying actions
+  - Badge types: milestone (10 posts), streak (7 day writing streak), community (100 helpful comments)
+  - Progress tracking (partial completion)
+- ❌ **Badge display**
+  - User profile badges
+  - Post author badges (Top Writer, etc.)
+  - Leaderboards (weekly/monthly/all-time)
+- ❌ **Streak system**
+  - Daily writing/reading streaks
+  - Streak freeze (skip 1 day without losing streak)
+  - Streak milestones (7, 30, 100, 365 days)
+
+---
+
+### 🔴 Phase 7: Distributed Systems Patterns (Production-Grade Infrastructure)
+
+#### 23. **Circuit Breaker** (Resilience Pattern)
+
+**Status**: Not implemented
+
+- ❌ **Per-service circuit breaker**
+  - States: Closed (normal) → Open (failing) → Half-Open (testing recovery)
+  - Trip threshold: N failures in M seconds
+  - Recovery: half-open allows 1 request through, success → close, failure → open
+  - Fallback responses when circuit is open
+- ❌ **Implementation in gateway**
+  - Circuit breaker per upstream service (posts, users, notifications)
+  - If notification-service is down, gateway still serves posts/users
+  - Metrics: circuit state changes, failure rates, fallback count
+- ❌ **Configuration**
+  - Failure threshold (e.g., 5 failures in 30s)
+  - Recovery timeout (e.g., 60s before half-open)
+  - Sliding window for failure counting
+
+```rust
+enum CircuitState {
+    Closed { failure_count: u32 },
+    Open { opened_at: Instant },
+    HalfOpen,
+}
+
+struct CircuitBreaker {
+    state: RwLock<CircuitState>,
+    failure_threshold: u32,
+    recovery_timeout: Duration,
+}
+```
+
+#### 24. **Saga Orchestrator** (Distributed Transactions)
+
+**Status**: Not implemented
+
+- ❌ **Saga definition**
+  - Define multi-step workflows as a sequence of local transactions
+  - Each step has a compensating action (rollback)
+  - Example flow: `subscribe → charge payment → unlock content → send notification`
+- ❌ **Orchestrator pattern**
+  - Central saga coordinator tracks step progress
+  - On failure: execute compensating actions in reverse order
+  - Saga state persisted to database (survives crashes)
+- ❌ **Saga steps**
+  - `PaymentStep`: charge card → compensate: refund
+  - `ContentStep`: unlock post → compensate: re-lock
+  - `NotificationStep`: send email → compensate: (no-op, idempotent)
+- ❌ **Saga state machine**
+  - States: Started → StepN_Executing → StepN_Completed → ... → Completed/Failed
+  - Timeout handling per step
+  - Dead letter queue for permanently failed sagas
+
+#### 25. **Event Sourcing** (Append-Only Event Store)
+
+**Status**: Not implemented (currently using outbox pattern)
+
+- ❌ **Event store**
+  - Append-only table: `events(id, stream_id, event_type, data, version, timestamp)`
+  - Optimistic concurrency via version number
+  - Stream per aggregate (e.g., `post-{uuid}`, `user-{uuid}`)
+- ❌ **Event types**
+  - `PostCreated`, `PostUpdated`, `PostPublished`, `PostArchived`
+  - `UserRegistered`, `UserProfileUpdated`, `UserDeactivated`
+  - `CommentAdded`, `CommentDeleted`
+- ❌ **Projections** (read models built from events)
+  - `PostListProjection`: denormalized view for feed
+  - `UserProfileProjection`: aggregated user data
+  - `AnalyticsProjection`: event counts, trends
+  - Rebuild projections by replaying events
+- ❌ **Snapshots**
+  - Periodic snapshots to avoid replaying entire history
+  - Snapshot every N events per stream
+  - Load snapshot + replay events since snapshot
+
+#### 26. **CQRS** (Command Query Responsibility Segregation)
+
+**Status**: Not implemented
+
+- ❌ **Separate write model**
+  - Commands: `CreatePost`, `UpdatePost`, `PublishPost`
+  - Command handlers validate and produce events
+  - Write to normalized tables optimized for consistency
+- ❌ **Separate read model**
+  - Queries: `GetFeed`, `GetPostWithAuthor`, `SearchPosts`
+  - Read from denormalized views optimized for query patterns
+  - Materialized views or separate read database
+- ❌ **Sync between models**
+  - Events published from write side
+  - Projectors consume events and update read models
+  - Eventual consistency (read model lags write model by milliseconds)
+- ❌ **Benefits**
+  - Read model can be optimized (pre-joined tables, search indexes)
+  - Write model stays simple and consistent
+  - Independent scaling of read vs write workloads
+
+#### 27. **Consistent Hashing** (WebSocket Connection Distribution)
+
+**Status**: Not implemented
+
+- ❌ **Hash ring for WebSocket routing**
+  - Hash `user_id` to determine which notification-service instance handles their WebSocket
+  - Consistent hashing minimizes redistribution when nodes join/leave
+  - Virtual nodes for uniform distribution
+- ❌ **Connection-aware load balancing**
+  - Gateway routes WebSocket upgrades to correct instance
+  - Sticky sessions based on hash ring lookup
+  - Graceful connection migration on node removal
+- ❌ **Broadcast across instances**
+  - When notification arrives for user on another node
+  - Use Redis Pub/Sub or internal message bus to relay
+  - Each node subscribes to events for its assigned users
+
+```rust
+struct HashRing {
+    ring: BTreeMap<u64, NodeId>,
+    virtual_nodes: u32,
+}
+impl HashRing {
+    fn get_node(&self, key: &str) -> NodeId {
+        let hash = hash(key);
+        self.ring.range(hash..).next()
+            .or_else(|| self.ring.iter().next())
+            .map(|(_, node)| *node)
+            .unwrap()
+    }
+}
+```
+
+#### 28. **Leader Election** (Single-Writer Guarantee)
+
+**Status**: Not implemented
+
+- ❌ **Problem**: Multiple outbox poller instances would cause duplicate publishes
+- ❌ **Postgres advisory locks**
+  - `SELECT pg_try_advisory_lock(hash)` before polling
+  - Only one instance acquires lock, others skip
+  - Lock auto-releases on disconnect
+- ❌ **etcd/Consul-based election** (alternative)
+  - Lease-based leadership
+  - Heartbeat renewal
+  - Automatic failover on leader crash
+- ❌ **Fencing tokens**
+  - Monotonically increasing token on each election
+  - Prevents stale leader from making writes after new leader elected
+
+#### 29. **Idempotency Layer** (Exactly-Once Semantics)
+
+**Status**: Not implemented
+
+- ❌ **Idempotency key table**
+  - `idempotency_keys(key, status, response, created_at, expires_at)`
+  - Client sends `Idempotency-Key` header with request
+  - If key exists and completed: return cached response
+  - If key exists and in-progress: return 409 Conflict
+  - If new key: process request, store result
+- ❌ **Pub/Sub deduplication**
+  - Track processed message IDs in Redis/DB
+  - On message receive: check if already processed
+  - Prevents duplicate notifications from redelivered messages
+- ❌ **TTL and cleanup**
+  - Keys expire after 24h (configurable)
+  - Background cleanup job for expired keys
+
+#### 30. **Distributed Rate Limiting** (Token Bucket)
+
+**Status**: Not implemented
+
+- ❌ **Token bucket algorithm**
+  - Per-user rate limits (e.g., 100 requests/minute)
+  - Per-IP rate limits for unauthenticated requests
+  - Refill rate and bucket capacity configurable per endpoint
+- ❌ **Distributed state** (Redis-backed)
+  - Lua script for atomic check-and-decrement
+  - Consistent across all gateway instances
+  - Sliding window or fixed window variants
+- ❌ **Rate limit headers**
+  - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+  - `429 Too Many Requests` with `Retry-After` header
+- ❌ **Tiered limits**
+  - Free tier: 60 req/min
+  - Authenticated: 300 req/min
+  - Premium: 1000 req/min
+
+```rust
+struct TokenBucket {
+    capacity: u32,
+    tokens: f64,
+    refill_rate: f64,       // tokens per second
+    last_refill: Instant,
+}
+impl TokenBucket {
+    fn try_consume(&mut self) -> bool {
+        self.refill();
+        if self.tokens >= 1.0 {
+            self.tokens -= 1.0;
+            true
+        } else {
+            false
+        }
+    }
+}
+```
+
+#### 31. **Backpressure & Load Shedding**
+
+**Status**: Not implemented
+
+- ❌ **Bounded request queues**
+  - Tower middleware with concurrency limit
+  - Reject with `503 Service Unavailable` when queue full
+  - Priority queue: authenticated > anonymous
+- ❌ **Adaptive concurrency**
+  - Measure request latency percentiles
+  - Reduce concurrency limit when p99 latency increases
+  - Increase when latency drops (TCP Vegas-style)
+- ❌ **Graceful degradation**
+  - Disable non-critical features under load (analytics, recommendations)
+  - Serve cached/stale responses when DB is overloaded
+  - Health check reports degraded state
+
+---
+
 ### 📊 Feature Summary Table
 
-| Feature                   | Skill Area          | Complexity | Learning Value                           |
-| ------------------------- | ------------------- | ---------- | ---------------------------------------- |
-| Versioned Articles (MVCC) | DBMS Internals      | ⭐⭐⭐⭐   | Transaction processing, visibility rules |
-| Geo-Replicated Reads      | Distributed Systems | ⭐⭐⭐⭐⭐ | Replication, consistency models          |
-| Search Query DSL          | Compiler/Parser     | ⭐⭐⭐     | Lexer, parser, AST                       |
-| Custom Secondary Indexes  | DBMS Internals      | ⭐⭐⭐⭐   | B-Tree, inverted index, bloom filter     |
-| Query Planner for Feeds   | DBMS Internals      | ⭐⭐⭐⭐   | Cost estimation, optimization            |
-| Content Validation DSL    | Compiler/DSL        | ⭐⭐⭐     | Rule engines, DSL design                 |
-| WASM Plugins              | Systems Programming | ⭐⭐⭐⭐   | Sandboxing, plugin architecture          |
-| Zero-Downtime Schema      | DBMS Internals      | ⭐⭐⭐⭐   | Online DDL, migrations                   |
-| Async Ingestion Pipeline  | Systems Programming | ⭐⭐⭐     | Lock-free, async, batching               |
-| Distributed Tracing       | Distributed Systems | ⭐⭐       | Observability, instrumentation           |
-| Offline-First (CRDTs)     | Distributed Systems | ⭐⭐⭐⭐⭐ | CRDTs, sync protocols                    |
+| Feature                   | Skill Area          | Complexity | Learning Value                            |
+| ------------------------- | ------------------- | ---------- | ----------------------------------------- |
+| Versioned Articles (MVCC) | DBMS Internals      | ⭐⭐⭐⭐   | Transaction processing, visibility rules  |
+| Geo-Replicated Reads      | Distributed Systems | ⭐⭐⭐⭐⭐ | Replication, consistency models           |
+| Search Query DSL          | Compiler/Parser     | ⭐⭐⭐     | Lexer, parser, AST                        |
+| Custom Secondary Indexes  | DBMS Internals      | ⭐⭐⭐⭐   | B-Tree, inverted index, bloom filter      |
+| Query Planner for Feeds   | DBMS Internals      | ⭐⭐⭐⭐   | Cost estimation, optimization             |
+| Content Validation DSL    | Compiler/DSL        | ⭐⭐⭐     | Rule engines, DSL design                  |
+| WASM Plugins              | Systems Programming | ⭐⭐⭐⭐   | Sandboxing, plugin architecture           |
+| Zero-Downtime Schema      | DBMS Internals      | ⭐⭐⭐⭐   | Online DDL, migrations                    |
+| Async Ingestion Pipeline  | Systems Programming | ⭐⭐⭐     | Lock-free, async, batching                |
+| Distributed Tracing       | Distributed Systems | ⭐⭐       | Observability, instrumentation            |
+| Offline-First (CRDTs)     | Distributed Systems | ⭐⭐⭐⭐⭐ | CRDTs, sync protocols                     |
+| Applause Protocol         | Systems Programming | ⭐⭐⭐     | Debouncing, distributed counters          |
+| Reading Time Estimation   | Content Processing  | ⭐⭐       | Heuristic algorithms                      |
+| Content Graph             | Data Engineering    | ⭐⭐⭐⭐   | Graph algorithms, recommendations         |
+| A/B Tested Headlines      | Data Science        | ⭐⭐⭐     | Multi-armed bandit, statistics            |
+| Email Delivery Pipeline   | Distributed Systems | ⭐⭐⭐⭐   | Fan-out, retry, reputation management     |
+| Custom Domains            | Infrastructure      | ⭐⭐⭐     | SSL, reverse proxy, multi-tenancy         |
+| Liquid Tags               | Compiler/Parser     | ⭐⭐⭐     | Custom syntax, oEmbed, rendering          |
+| Webmentions               | Distributed Systems | ⭐⭐⭐     | W3C protocols, federation                 |
+| Badge System              | Game Design         | ⭐⭐       | Event-driven gamification                 |
+| Circuit Breaker           | Distributed Systems | ⭐⭐⭐     | Resilience, failure isolation             |
+| Saga Orchestrator         | Distributed Systems | ⭐⭐⭐⭐⭐ | Distributed transactions, compensation    |
+| Event Sourcing            | Distributed Systems | ⭐⭐⭐⭐⭐ | Append-only log, projections, replay      |
+| CQRS                      | Architecture        | ⭐⭐⭐⭐   | Read/write separation, materialized views |
+| Consistent Hashing        | Distributed Systems | ⭐⭐⭐⭐   | Hash rings, connection distribution       |
+| Leader Election           | Distributed Systems | ⭐⭐⭐⭐   | Consensus, advisory locks, fencing        |
+| Idempotency Layer         | Distributed Systems | ⭐⭐⭐     | Exactly-once semantics, deduplication     |
+| Distributed Rate Limiting | Distributed Systems | ⭐⭐⭐     | Token bucket, Redis Lua scripts           |
+| Backpressure              | Systems Programming | ⭐⭐⭐⭐   | Adaptive concurrency, load shedding       |
 
 ---
 
 ### 🎯 Recommended Learning Order
 
-1. **Start Simple**: Search Query DSL, Content Validation DSL
+1. **Start Simple**: Search Query DSL, Content Validation DSL, Reading Time Estimation, Badge System
 2. **Core DBMS**: Versioned Articles (MVCC), Custom Secondary Indexes
-3. **Performance**: Async Ingestion Pipeline, Distributed Tracing
-4. **Advanced**: Query Planner, Zero-Downtime Schema
-5. **Expert**: Geo-Replicated Reads, WASM Plugins, CRDTs
+3. **Resilience**: Circuit Breaker, Idempotency Layer, Distributed Rate Limiting
+4. **Performance**: Async Ingestion Pipeline, Distributed Tracing, Applause Protocol, Backpressure
+5. **Architecture**: CQRS, Event Sourcing, Saga Orchestrator
+6. **Advanced**: Query Planner, Zero-Downtime Schema, Consistent Hashing, Leader Election
+7. **Expert**: Geo-Replicated Reads, WASM Plugins, CRDTs
+8. **Platform Features**: Email Pipeline, Custom Domains, Liquid Tags, Content Graph, A/B Headlines, Webmentions

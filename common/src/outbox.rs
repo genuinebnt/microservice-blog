@@ -5,12 +5,12 @@ use sea_orm::{
     ActiveModelBehavior, DeriveEntityModel, DeriveRelation, EnumIter, prelude::DateTimeWithTimeZone,
 };
 use sea_orm::{DatabaseTransaction, QueryOrder, QuerySelect};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::pubsub::PubSubPublisher;
 
-#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "outbox")]
 pub struct Model {
     #[sea_orm(primary_key)]

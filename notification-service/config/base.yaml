@@ -1,0 +1,23 @@
+application:
+  port: 8004
+  host: "0.0.0.0"
+
+database:
+  engine: "postgres"
+  hostname: "127.0.0.1"
+  port: 5434
+  username: "postgres"
+  password: "postgres"
+  database_name: "notifications"
+
+cache:
+  max_capacity: 10000
+  ttl_secs: 300
+  tti_secs: 60
+
+pubsub:
+  project_id: "your-gcp-project"
+  topic: "blog-events"
+  subscription: "notification-sub"
+  use_emulator: true
+  emulator_host: "localhost:8085"

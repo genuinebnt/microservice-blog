@@ -16,7 +16,7 @@ pub async fn list_posts(State(state): State<Arc<AppState>>) -> Result<Json<Vec<P
     let posts = state
         .repos
         .posts
-        .list()
+        .list_posts()
         .await?
         .unwrap_or_default()
         .into_iter()
@@ -39,7 +39,7 @@ pub async fn create_post(
         .updated_at(Utc::now().into())
         .build();
 
-    state.repos.posts.create(post.clone()).await?;
+    state.repos.posts.create_post(post.clone()).await?;
     Ok(Json(post.into()))
 }
 
@@ -50,7 +50,7 @@ pub async fn get_post(
     let post = state
         .repos
         .posts
-        .get(id.into())
+        .get_post(id)
         .await?
         .ok_or_else(|| common::error::AppError::NotFoundError("Post not found".to_string()))?;
 
@@ -58,11 +58,11 @@ pub async fn get_post(
 }
 
 pub async fn update_post(State(state): State<Arc<AppState>>, Json(post): Json<Post>) -> Result<()> {
-    state.repos.posts.update(post.clone()).await?;
+    state.repos.posts.update_post(post.clone()).await?;
     Ok(())
 }
 
 pub async fn delete_post(State(state): State<Arc<AppState>>, Path(id): Path<PostId>) -> Result<()> {
-    state.repos.posts.delete(id.into()).await?;
+    state.repos.posts.delete_post(id).await?;
     Ok(())
 }

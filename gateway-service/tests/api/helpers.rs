@@ -21,10 +21,10 @@ impl TestGateway {
     pub async fn wait_until_ready(&self) {
         let health_url = format!("{}/health_check", self.address);
         for i in 0..30 {
-            if let Ok(res) = self.client.get(&health_url).send().await {
-                if res.status().is_success() {
-                    return;
-                }
+            if let Ok(res) = self.client.get(&health_url).send().await
+                && res.status().is_success()
+            {
+                return;
             }
             tokio::time::sleep(Duration::from_millis(500)).await;
             if i % 5 == 0 {

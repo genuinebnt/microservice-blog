@@ -2,7 +2,6 @@ application:
   port: 8002
   host: 0.0.0.0
 database:
-  backend: "seaorm"
   engine: "postgres"
   username: "postgres"
   password: "password"
@@ -15,3 +14,12 @@ database:
   idle_timeout: 600
   max_lifetime: 1800
   require_ssl: false
+cache:
+  max_capacity: 10000
+  ttl_secs: 300
+  tti_secs: 60
+pubsub:
+  project_id: "your-gcp-project"
+  topic: "blog-events"
+  use_emulator: true
+  emulator_host: "localhost:8085"

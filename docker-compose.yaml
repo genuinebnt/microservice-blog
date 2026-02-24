@@ -94,6 +94,59 @@ services:
     networks:
       - blog-network
 
+  notification-db:
+    profiles: ["production"]
+    image: postgres:17
+    container_name: notification-db
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
+    volumes:
+      - notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  notification-service:
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${NOTIFICATIONS_DATABASE_URL}
+      APP_DATABASE__HOSTNAME: notification-db
+      APP_DATABASE__PORT: 5432
+      APP_PUBSUB__EMULATOR_HOST: pubsub-emulator:8085
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT}:8004"
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      pubsub-emulator:
+        condition: service_started
+    networks:
+      - blog-network
+
+  pubsub-emulator:
+    profiles: ["production", "test"]
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    container_name: pubsub-emulator
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=your-gcp-project
+    ports:
+      - "8085:8085"
+    networks:
+      - blog-network
+
   auth-service:
     profiles: ["production"]
     build:
@@ -124,12 +177,15 @@ services:
       APP_POSTS_SERVICE__PORT: 8001
       APP_USERS_SERVICE__HOST: users-service
       APP_USERS_SERVICE__PORT: 8002
+      APP_NOTIFICATION_SERVICE__HOST: notification-service
+      APP_NOTIFICATION_SERVICE__PORT: 8004
       APP_APPLICATION__PORT: 8000
     ports:
       - "${GATEWAY_PORT}:8000"
     depends_on:
       - posts-service
       - users-service
+      - notification-service
     networks:
       - blog-network
 
@@ -232,6 +288,25 @@ services:
     networks:
       - blog-network
 
+  notification-db-test:
+    image: postgres:17
+    container_name: notification-db-test
+    profiles: ["test"]
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5437:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
   gateway-service-test:
     build:
       context: .
@@ -244,6 +319,8 @@ services:
       APP_POSTS_SERVICE__PORT: 8001
       APP_USERS_SERVICE__HOST: users-service-test
       APP_USERS_SERVICE__PORT: 8002
+      APP_NOTIFICATION_SERVICE__HOST: notification-service-test
+      APP_NOTIFICATION_SERVICE__PORT: 8004
       APP_APPLICATION__PORT: 8000
     ports:
       - "9000:8000"
@@ -256,6 +333,7 @@ services:
 volumes:
   posts_data:
   users_data:
+  notification_data:
   redis_data:
 
 networks:

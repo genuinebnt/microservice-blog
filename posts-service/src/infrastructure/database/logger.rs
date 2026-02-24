@@ -18,11 +18,11 @@ impl LoggedPostRepository {
 
 #[async_trait]
 impl PostRepository for LoggedPostRepository {
-    async fn create(&self, post: Post) -> Result<()> {
+    async fn create_post(&self, post: Post) -> Result<()> {
         let start = Instant::now();
         tracing::info!(title = %post.title, "Creating post");
 
-        let result = self.inner.create(post).await;
+        let result = self.inner.create_post(post).await;
 
         match &result {
             Ok(_) => tracing::info!(elapsed_ms = %start.elapsed().as_millis(), "Post created"),
@@ -31,10 +31,10 @@ impl PostRepository for LoggedPostRepository {
         result
     }
 
-    async fn get(&self, id: PostId) -> Result<Option<Post>> {
+    async fn get_post(&self, id: PostId) -> Result<Option<Post>> {
         let start = Instant::now();
         let id_str = id.to_string();
-        let result = self.inner.get(id).await;
+        let result = self.inner.get_post(id).await;
 
         match &result {
             Ok(Some(p)) => {
@@ -46,11 +46,11 @@ impl PostRepository for LoggedPostRepository {
         result
     }
 
-    async fn update(&self, post: Post) -> Result<()> {
+    async fn update_post(&self, post: Post) -> Result<()> {
         let start = Instant::now();
         tracing::info!(post_id = %post.id, title = %post.title, "Updating post");
 
-        let result = self.inner.update(post).await;
+        let result = self.inner.update_post(post).await;
 
         match &result {
             Ok(_) => tracing::info!(elapsed_ms = %start.elapsed().as_millis(), "Post updated"),
@@ -59,12 +59,12 @@ impl PostRepository for LoggedPostRepository {
         result
     }
 
-    async fn delete(&self, id: PostId) -> Result<()> {
+    async fn delete_post(&self, id: PostId) -> Result<()> {
         let start = Instant::now();
         let id_str = id.to_string();
         tracing::info!(post_id = %id_str, "Deleting post");
 
-        let result = self.inner.delete(id).await;
+        let result = self.inner.delete_post(id).await;
 
         match &result {
             Ok(_) => tracing::info!(elapsed_ms = %start.elapsed().as_millis(), "Post deleted"),
@@ -73,9 +73,9 @@ impl PostRepository for LoggedPostRepository {
         result
     }
 
-    async fn list(&self) -> Result<Option<Vec<Post>>> {
+    async fn list_posts(&self) -> Result<Option<Vec<Post>>> {
         let start = Instant::now();
-        let result = self.inner.list().await;
+        let result = self.inner.list_posts().await;
 
         match &result {
             Ok(Some(posts)) => {

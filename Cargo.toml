@@ -7,5 +7,7 @@ members = [
     "common",
     "gateway-service",
     "auth-service",
+    "notification-service",
+    "notification-service/migration",
 ]
 resolver = "2"

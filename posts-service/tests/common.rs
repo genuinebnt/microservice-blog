@@ -4,7 +4,7 @@ use anyhow::Context;
 use common::telemetry;
 use posts_service::{
     infrastructure::{
-        database::{RepoProvider, bootstrap, build_db_url},
+        database::{RepoProvider, bootstrap_db, build_db_url},
         http::create_router,
     },
     presentation::state::AppState,
@@ -66,7 +66,7 @@ pub async fn spawn_app() -> TestApp {
 
     let addr = listener.local_addr().unwrap();
 
-    let conn = bootstrap(&config.database).await.unwrap();
+    let conn = bootstrap_db(&config.database).await.unwrap();
     let repo_provider = RepoProvider::from_connection(conn, &config.cache)
         .await
         .unwrap();

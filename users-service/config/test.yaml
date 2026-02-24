@@ -1,0 +1,13 @@
+application:
+  host: 127.0.0.1
+database:
+  hostname: "localhost"
+  port: 5436
+  username: "postgres"
+  password: "postgres"
+  database_name: "postgres"
+  require_ssl: false
+cache:
+  redis:
+    hostname: localhost
+    port: 6380

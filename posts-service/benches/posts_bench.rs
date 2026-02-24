@@ -6,23 +6,17 @@ use common::config::CacheSettings;
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use posts_service::domain::{Post, PostId, PostRepository};
 use posts_service::infrastructure::database::seaorm::SeaOrmPostRepository;
-use posts_service::infrastructure::database::types::DatabaseConn;
-use posts_service::infrastructure::database::{CachedPostRepository, bootstrap};
+use posts_service::infrastructure::database::{CachedPostRepository, bootstrap_db};
 
 async fn setup_db_repo() -> (Arc<SeaOrmPostRepository>, common::config::Settings) {
     unsafe { std::env::set_var("APP_ENVIRONMENT", "test") }
 
     let config = common::config::get_configuration::<common::config::Settings>("config").unwrap();
-    let conn = bootstrap(&config.database).await.unwrap();
+    let db = bootstrap_db(&config.database).await.unwrap();
 
-    match conn {
-        DatabaseConn::SeaOrm(db) => {
-            use migration::{Migrator, MigratorTrait};
-            Migrator::up(&db, None).await.unwrap();
-            (Arc::new(SeaOrmPostRepository::new(db)), config)
-        }
-        _ => panic!("expected SeaOrm backend"),
-    }
+    use migration::{Migrator, MigratorTrait};
+    Migrator::up(&db, None).await.unwrap();
+    (Arc::new(SeaOrmPostRepository::new(db)), config)
 }
 
 fn make_post() -> Post {
@@ -51,14 +45,14 @@ fn bench_get_no_cache(c: &mut Criterion) {
 
     let post = make_post();
     let id = post.id;
-    rt.block_on(db_repo.create(post)).unwrap();
+    rt.block_on(db_repo.create_post(post)).unwrap();
 
     c.bench_with_input(BenchmarkId::new("get_post", "no_cache"), &id, |b, &id| {
         b.to_async(&rt)
-            .iter(|| async { db_repo.get(id.into()).await.unwrap() });
+            .iter(|| async { db_repo.get_post(id.into()).await.unwrap() });
     });
 
-    rt.block_on(db_repo.delete(id.into())).unwrap();
+    rt.block_on(db_repo.delete_post(id.into())).unwrap();
 }
 
 fn bench_get_local_cache(c: &mut Criterion) {
@@ -74,19 +68,19 @@ fn bench_get_local_cache(c: &mut Criterion) {
 
     let post = make_post();
     let id = post.id;
-    rt.block_on(cached_repo.create(post)).unwrap();
-    rt.block_on(cached_repo.get(id.into())).unwrap();
+    rt.block_on(cached_repo.create_post(post)).unwrap();
+    rt.block_on(cached_repo.get_post(id.into())).unwrap();
 
     c.bench_with_input(
         BenchmarkId::new("get_post", "local_cache"),
         &id,
         |b, &id| {
             b.to_async(&rt)
-                .iter(|| async { cached_repo.get(id.into()).await.unwrap() });
+                .iter(|| async { cached_repo.get_post(id.into()).await.unwrap() });
         },
     );
 
-    rt.block_on(db_repo.delete(id.into())).unwrap();
+    rt.block_on(db_repo.delete_post(id.into())).unwrap();
 }
 
 fn bench_get_redis_cache(c: &mut Criterion) {
@@ -110,19 +104,19 @@ fn bench_get_redis_cache(c: &mut Criterion) {
 
     let post = make_post();
     let id = post.id;
-    rt.block_on(cached_repo.create(post)).unwrap();
-    rt.block_on(cached_repo.get(id.into())).unwrap();
+    rt.block_on(cached_repo.create_post(post)).unwrap();
+    rt.block_on(cached_repo.get_post(id.into())).unwrap();
 
     c.bench_with_input(
         BenchmarkId::new("get_post", "redis_cache"),
         &id,
         |b, &id| {
             b.to_async(&rt)
-                .iter(|| async { cached_repo.get(id.into()).await.unwrap() });
+                .iter(|| async { cached_repo.get_post(id.into()).await.unwrap() });
         },
     );
 
-    rt.block_on(db_repo.delete(id.into())).unwrap();
+    rt.block_on(db_repo.delete_post(id.into())).unwrap();
 }
 
 fn bench_get_tiered_cache(c: &mut Criterion) {
@@ -147,19 +141,19 @@ fn bench_get_tiered_cache(c: &mut Criterion) {
 
     let post = make_post();
     let id = post.id;
-    rt.block_on(cached_repo.create(post)).unwrap();
-    rt.block_on(cached_repo.get(id.into())).unwrap();
+    rt.block_on(cached_repo.create_post(post)).unwrap();
+    rt.block_on(cached_repo.get_post(id.into())).unwrap();
 
     c.bench_with_input(
         BenchmarkId::new("get_post", "tiered_cache"),
         &id,
         |b, &id| {
             b.to_async(&rt)
-                .iter(|| async { cached_repo.get(id.into()).await.unwrap() });
+                .iter(|| async { cached_repo.get_post(id.into()).await.unwrap() });
         },
     );
 
-    rt.block_on(db_repo.delete(id.into())).unwrap();
+    rt.block_on(db_repo.delete_post(id.into())).unwrap();
 }
 
 fn bench_create(c: &mut Criterion) {
@@ -179,8 +173,8 @@ fn bench_create(c: &mut Criterion) {
         b.to_async(&rt).iter(|| async {
             let post = make_post();
             let id = post.id;
-            db_repo.create(post).await.unwrap();
-            db_repo.delete(id.into()).await.unwrap();
+            db_repo.create_post(post).await.unwrap();
+            db_repo.delete_post(id.into()).await.unwrap();
         });
     });
 
@@ -188,8 +182,8 @@ fn bench_create(c: &mut Criterion) {
         b.to_async(&rt).iter(|| async {
             let post = make_post();
             let id = post.id;
-            cached_repo.create(post).await.unwrap();
-            db_repo.delete(id.into()).await.unwrap();
+            cached_repo.create_post(post).await.unwrap();
+            db_repo.delete_post(id.into()).await.unwrap();
         });
     });
 

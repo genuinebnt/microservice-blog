@@ -3,10 +3,9 @@ mod cache;
 mod factory;
 mod logger;
 pub mod seaorm;
-pub mod types;
 mod url;
 
-pub use bootstrap::bootstrap;
+pub use bootstrap::{bootstrap_db, bootstrap_outbox};
 pub use cache::CachedPostRepository;
 pub use factory::RepoProvider;
 pub use logger::LoggedPostRepository;

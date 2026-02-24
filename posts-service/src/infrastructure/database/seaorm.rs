@@ -4,8 +4,12 @@ use crate::domain::{
     repository::PostRepository,
 };
 use async_trait::async_trait;
-use common::error::Result;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, ModelTrait};
+use common::{error::Result, outbox};
+use sea_orm::{
+    ActiveModelTrait,
+    ActiveValue::{Set, Unchanged},
+    DatabaseConnection, EntityTrait, ModelTrait, TransactionTrait,
+};
 
 #[derive(Debug, Clone)]
 pub struct SeaOrmPostRepository {
@@ -20,21 +24,39 @@ impl SeaOrmPostRepository {
 
 #[async_trait]
 impl PostRepository for SeaOrmPostRepository {
-    async fn create(&self, post: Post) -> Result<()> {
-        let active_model = entities::post::ActiveModel::from(post);
-        active_model.insert(&self.conn).await?;
+    async fn create_post(&self, post: Post) -> Result<()> {
+        let tx = self.conn.begin().await?;
+
+        let active = entities::post::ActiveModel::from(post);
+        let post_model = active.insert(&tx).await?;
+
+        outbox::insert_outbox_event(
+            &tx,
+            "post",
+            post_model.id,
+            "post_created",
+            serde_json::json!({
+                "post_id": post_model.id,
+                "author_id": post_model.author_id,
+                "title": post_model.title
+            }),
+        )
+        .await?;
+
+        tx.commit().await?;
+
         Ok(())
     }
 
-    async fn get(&self, id: PostId) -> Result<Option<Post>> {
+    async fn get_post(&self, id: PostId) -> Result<Option<Post>> {
         let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
         Ok(post)
     }
 
-    async fn update(&self, post: Post) -> Result<()> {
-        use sea_orm::{EntityTrait, Set, Unchanged};
+    async fn update_post(&self, post: Post) -> Result<()> {
+        let tx = self.conn.begin().await?;
 
         let active_model = entities::post::ActiveModel {
             id: Unchanged(post.id),
@@ -45,14 +67,29 @@ impl PostRepository for SeaOrmPostRepository {
             updated_at: Set(chrono::Utc::now().into()),
         };
 
-        entities::post::Entity::update(active_model)
-            .exec(&self.conn)
+        let post_model = entities::post::Entity::update(active_model)
+            .exec(&tx)
             .await?;
+
+        outbox::insert_outbox_event(
+            &tx,
+            "post",
+            post_model.id,
+            "post_updated",
+            serde_json::json!({
+                "post_id": post_model.id,
+                "author_id": post_model.author_id,
+                "title": post_model.title
+            }),
+        )
+        .await?;
+
+        tx.commit().await?;
 
         Ok(())
     }
 
-    async fn delete(&self, id: PostId) -> Result<()> {
+    async fn delete_post(&self, id: PostId) -> Result<()> {
         let post = entities::post::Entity::find_by_id(uuid::Uuid::from(id))
             .one(&self.conn)
             .await?;
@@ -67,7 +104,7 @@ impl PostRepository for SeaOrmPostRepository {
         Ok(())
     }
 
-    async fn list(&self) -> Result<Option<Vec<Post>>> {
+    async fn list_posts(&self) -> Result<Option<Vec<Post>>> {
         let posts = entities::post::Entity::find().all(&self.conn).await?;
         Ok(Some(posts))
     }
